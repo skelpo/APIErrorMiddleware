@@ -2,6 +2,8 @@
 
 A middleware to catch errors from route handlers and other middleware, and convert them to a JSON response.
 
+Something that is cool about this middleware is that when Fluent sends one of those pesky `modelNotFound` errors (you know what I am talking about right? Yeah, that 500 but should be 404 error), we convert that to a 404 👍.
+
 ## Instillation
 
 Add the package declaration to your project's manifest `dependencies` array:
