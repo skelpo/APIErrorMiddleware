@@ -7,13 +7,18 @@ import Foundation
 ///
 /// Errors with an identifier of `modelNotFound` get
 /// a 404 status code.
-public final class APIErrorMiddleware: Middleware {
+public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     
     // We define an empty init because the one
     // synthesized bby Swift is marked `internal`.
     
     /// Create an instance if `APIErrorMiddleware`.
     public init() {}
+    
+    /// Creates a service instance. Used by a `ServiceFactory`.
+    public static func makeService(for worker: Container) throws -> APIErrorMiddleware {
+        return APIErrorMiddleware()
+    }
     
     /// Catch all errors thrown by the route handler or
     /// middleware futher down the responder chain and

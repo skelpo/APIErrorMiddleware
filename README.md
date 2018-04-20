@@ -26,7 +26,7 @@ However, if you are creating an API service and want all errors to be caught by 
 You can register the middleware to the `MiddlewareConfig` using:
 
 ```swift
-middlewares.add(APIErrorMiddleware())
+middlewares.use(APIErrorMiddleware.self)
 ```
 
 Most likely, you will want to register this middleware first. This ensures that all the errors are caught and we don't have any thrown after its responder is run. There are some that you might want to run afterwards though, such as Vapor's built in `DateMiddleware`.
