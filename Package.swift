@@ -8,10 +8,10 @@ let package = Package(
         .library(name: "APIErrorMiddleware", targets: ["APIErrorMiddleware"]),
     ],
     dependencies: [
-        
+        .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0-rc")
     ],
     targets: [
-        .target(name: "APIErrorMiddleware", dependencies: []),
+        .target(name: "APIErrorMiddleware", dependencies: ["Vapor"]),
         .testTarget(name: "APIErrorMiddlewareTests", dependencies: ["APIErrorMiddleware"]),
     ]
 )
