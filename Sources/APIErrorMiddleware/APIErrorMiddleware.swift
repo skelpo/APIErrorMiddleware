@@ -24,7 +24,10 @@ public final class APIErrorMiddleware: Middleware {
         let message: String
         let status: HTTPStatus?
         
-        if let error = error as? AbortError {
+        if let error = error as? Debuggable, error.identifier == "modelNotFound" {
+            message = error.reason
+            status = .notFound
+        } else if let error = error as? AbortError {
             message = error.reason
             status = error.status
         } else {
