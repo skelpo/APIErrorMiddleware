@@ -42,6 +42,8 @@ public protocol ErrorCatchingSpecialization {
 
 /// Catches Fluent's `modelNotFound` error and returns a 404 status code.
 public struct ModelNotFound: ErrorCatchingSpecialization {
+    public init() {}
+    
     public func convert(error: Error, on request: Request) -> ErrorResult? {
         if let error = error as? Debuggable, error.identifier == "modelNotFound" {
             
