@@ -13,7 +13,7 @@ public struct ErrorResult {
     public let status: HTTPStatus?
     
     /// Creates an instance with a 'message' and 'status'.
-    public init(message: String, status: HTTPStatus) {
+    public init(message: String, status: HTTPStatus?) {
         self.message = message
         self.status = status
     }
