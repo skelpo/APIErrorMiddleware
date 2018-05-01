@@ -9,11 +9,17 @@ import Foundation
 /// a 404 status code.
 public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     
+    /// Specializations for converting specific errors
+    /// to `ErrorResult` objects.
+    let specializations: [ErrorCatchingSpecialization]
+    
     // We define an empty init because the one
     // synthesized bby Swift is marked `internal`.
     
     /// Create an instance if `APIErrorMiddleware`.
-    public init() {}
+    public init(specializations: [ErrorCatchingSpecialization] = []) {
+        self.specializations = specializations
+    }
     
     /// Creates a service instance. Used by a `ServiceFactory`.
     public static func makeService(for worker: Container) throws -> APIErrorMiddleware {
@@ -59,39 +65,41 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     /// - Returns: A response with a JSON body with a `{"error":<error>}` structure.
     private func response(for error: Error, with request: Request) -> Response {
         
-        // The value for the JSON `error` key.
-        let message: String
+        // The error message and status code
+        // for the response returned by the
+        // middleware.
+        var result: ErrorResult!
         
-        // The status code of the response.
-        let status: HTTPStatus?
+        // Loop through the specializations, running
+        // the error converter on each one.
+        for converter in self.specializations {
+            if let formatted = converter.convert(error: error, on: request) {
+                
+                // Found a non-nil response. Save it a break
+                // from the loop so we don't override it.
+                result = formatted
+                break
+            }
+        }
         
-        if let error = error as? Debuggable, error.identifier == "modelNotFound" {
-            
-            // We have the infamous `modelNotFound` error from Fluent that returns
-            // a 500 status code instead of a 404.
-            // Set the message to the error's `reason` and the status to 404 (Not Found)
-            message = error.reason
-            status = .notFound
-        } else if let error = error as? AbortError {
+        if result == nil, let error = error as? AbortError {
             
             // We have an `AbortError` which has both a
             // status code and error message.
             // Assign the data to the correct varaibles.
-            message = error.reason
-            status = error.status
-        } else {
+            result = ErrorResult(message: error.reason, status: error.status)
+        } else if result == nil {
             
             // We have some other error.
             // Set the message to the error's `description`.
             let error = error as CustomStringConvertible
-            message = error.description
-            status = nil
+            result = ErrorResult(message: error.description, status: nil)
         }
         
         // Create JSON with an `error` key with the `message` constant as its value.
         // We default to no data instead of throwing, because we don't want any errors
         // leaving the middleware body.
-        let json = (try? JSONEncoder().encode(["error": message])) ?? message.data(using: .utf8) ?? Data()
+        let json = (try? JSONEncoder().encode(["error": result.message])) ?? result.message.data(using: .utf8) ?? Data()
         
         // Create an HTTPResponse with
         // - The detected status code, using
@@ -99,7 +107,7 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
         // - A `application/json` Content Type header.
         // A body with the JSON we created.
         let httpResponse = HTTPResponse(
-            status: status ?? .badRequest,
+            status: result.status ?? .badRequest,
             headers: ["Content-Type": "application/json"],
             body: HTTPBody(data: json)
         )
