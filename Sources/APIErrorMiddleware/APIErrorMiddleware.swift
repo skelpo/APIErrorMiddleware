@@ -13,9 +13,6 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     /// to `ErrorResult` objects.
     let specializations: [ErrorCatchingSpecialization]
     
-    // We define an empty init because the one
-    // synthesized bby Swift is marked `internal`.
-    
     /// Create an instance if `APIErrorMiddleware`.
     public init(specializations: [ErrorCatchingSpecialization] = []) {
         self.specializations = specializations

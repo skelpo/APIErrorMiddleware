@@ -37,3 +37,19 @@ public protocol ErrorCatchingSpecialization {
     ///   passed in.
     func convert(error: Error, on request: Request) -> ErrorResult?
 }
+
+// MARK: - ErrorCatchingSpecialization implementations
+
+/// Catches Fluent's `modelNotFound` error and returns a 404 status code.
+public struct ModelNotFound: ErrorCatchingSpecialization {
+    public func convert(error: Error, on request: Request) -> ErrorResult? {
+        if let error = error as? Debuggable, error.identifier == "modelNotFound" {
+            
+            // We have the infamous `modelNotFound` error from Fluent that returns
+            // a 500 status code instead of a 404.
+            // Set the message to the error's `reason` and the status to 404 (Not Found)
+            return ErrorResult(message: error.reason, status: .notFound)
+        }
+        return nil
+    }
+}
