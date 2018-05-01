@@ -2,8 +2,6 @@
 
 A middleware to catch errors from route handlers and other middleware, and convert them to a JSON response.
 
-Something that is cool about this middleware is that when Fluent sends one of those pesky `modelNotFound` errors (you know what I am talking about right? Yeah, that 500 but should be 404 error), we convert that to a 404 👍.
-
 ## Instillation
 
 Add the package declaration to your project's manifest `dependencies` array:
@@ -32,3 +30,21 @@ middlewares.use(APIErrorMiddleware.self)
 ```
 
 Most likely, you will want to register this middleware first. This ensures that all the errors are caught and we don't have any thrown after its responder is run. There are some that you might want to run afterwards though, such as Vapor's built in `DateMiddleware`.
+
+## Specializations
+
+This middleware supports custom specializations which convert a Swift `Error` to a message and status code for the response returned by the middleware. 
+
+To add specializations to the middleware, initialize it with the ones to use:
+
+```swift
+middlewares.use(APIErrorMiddleware(specializations: [
+    ModelNotFound()
+]))
+```
+
+The specializations available the package are the following:
+
+- `ModelNotFound`: Catches the `modelNotFound` error thrown by Fluent when getting a model from a parameter and converts it to a 404 error.
+
+To create your own specializations, just conform any type to `ErrorCatchingSpecialization` and implement the `convert(error:on:)` method.
