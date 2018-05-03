@@ -39,11 +39,11 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
         // If no error is found, succed the promise with the response
         // returned by the responder.
         do {
-            return try next.respond(to: request).do({ (response) in
+            try next.respond(to: request).do { response in
                 result.succeed(result: response)
-            }).catch({ (error) in
+            }.catch { error in
                 result.succeed(result: self.response(for: error, with: request))
-            })
+            }
         } catch {
             result.succeed(result: self.response(for: error, with: request))
         }
