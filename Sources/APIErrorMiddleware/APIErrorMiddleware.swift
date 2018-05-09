@@ -72,7 +72,7 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
         for converter in self.specializations {
             if let formatted = converter.convert(error: error, on: request) {
                 
-                // Found a non-nil response. Save it a break
+                // Found a non-nil response. Save it and break
                 // from the loop so we don't override it.
                 result = formatted
                 break
@@ -85,13 +85,16 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
             // status code and error message.
             // Assign the data to the correct varaibles.
             result = ErrorResult(message: error.reason, status: error.status)
-        } else if result == nil, let error = error as? CustomStringConvertible {
-            
-            // We have some other error.
-            // Set the message to the error's `description`.
-            result = ErrorResult(message: error.description, status: nil)
         } else if result == nil {
-            result = ErrorResult(message: "Unknown error.", status: nil)
+            #if !os(macOS)
+            if let error = error as? CustomStringConvertible {
+                result = ErrorResult(message: error.description, status: nil)
+            } else {
+                result = ErrorResult(message: "Unknown error.", status: nil)
+            }
+            #else
+            result = ErrorResult(message: (error as CustomStringConvertible).description, status: nil)
+            #endif
         }
         
         // Create JSON with an `error` key with the `message` constant as its value.
