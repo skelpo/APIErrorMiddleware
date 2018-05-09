@@ -85,12 +85,13 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
             // status code and error message.
             // Assign the data to the correct varaibles.
             result = ErrorResult(message: error.reason, status: error.status)
-        } else if result == nil {
+        } else if result == nil, let error = error as? CustomStringConvertible {
             
             // We have some other error.
             // Set the message to the error's `description`.
-            let error = error as CustomStringConvertible
             result = ErrorResult(message: error.description, status: nil)
+        } else if result == nil {
+            result = ErrorResult(message: "Unknown error.", status: nil)
         }
         
         // Create JSON with an `error` key with the `message` constant as its value.
