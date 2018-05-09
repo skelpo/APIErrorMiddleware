@@ -86,6 +86,10 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
             // Assign the data to the correct varaibles.
             result = ErrorResult(message: error.reason, status: error.status)
         } else if result == nil {
+            
+            // We use a compiler OS check because `Error` can be directly
+            // convertred to `CustomStringConvertible` on macOS, but not
+            // on Linux.
             #if !os(macOS)
             if let error = error as? CustomStringConvertible {
                 result = ErrorResult(message: error.description, status: nil)
