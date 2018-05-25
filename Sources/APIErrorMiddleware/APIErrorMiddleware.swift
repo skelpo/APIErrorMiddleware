@@ -31,28 +31,16 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     /// middleware futher down the responder chain and
     /// convert it to a JSON response.
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        
-        // We create a new promise that wraps a `Response` object.
-        // No, there are not any initializers to do this.
-        let result = request.eventLoop.newPromise(Response.self)
-        
+
         // Call the next responder in the reponse chain.
         // If the future returned contains an error, or if
         // the next responder throws an error, catch it and
         // convert it to a JSON response.
-        // If no error is found, succed the promise with the response
-        // returned by the responder.
-        do {
-            try next.respond(to: request).do { response in
-                result.succeed(result: response)
-            }.catch { error in
-                result.succeed(result: self.response(for: error, with: request))
-            }
-        } catch {
-            result.succeed(result: self.response(for: error, with: request))
+        return Future.flatMap(on: request) {
+            return try next.respond(to: request)
+        }.mapIfError { error in
+            return self.response(for: error, with: request)
         }
-        
-        return result.futureResult
     }
     
     /// Creates a response with a JSON body.
