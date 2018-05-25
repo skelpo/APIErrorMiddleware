@@ -11,11 +11,15 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     
     /// Specializations for converting specific errors
     /// to `ErrorResult` objects.
-    let specializations: [ErrorCatchingSpecialization]
+    public var specializations: [ErrorCatchingSpecialization]
+    
+    /// The current environemnt that the application is in.
+    public let environment: Environment
     
     /// Create an instance if `APIErrorMiddleware`.
-    public init(specializations: [ErrorCatchingSpecialization] = []) {
+    public init(environment: Environment, specializations: [ErrorCatchingSpecialization] = []) {
         self.specializations = specializations
+        self.environment = environment
     }
     
     /// Creates a service instance. Used by a `ServiceFactory`.
