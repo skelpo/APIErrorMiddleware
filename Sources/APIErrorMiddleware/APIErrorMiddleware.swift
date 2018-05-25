@@ -24,7 +24,7 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
     
     /// Creates a service instance. Used by a `ServiceFactory`.
     public static func makeService(for worker: Container) throws -> APIErrorMiddleware {
-        return APIErrorMiddleware()
+        return APIErrorMiddleware(environment: worker.environment, specializations: [ModelNotFound()])
     }
     
     /// Catch all errors thrown by the route handler or
