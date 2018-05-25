@@ -83,26 +83,35 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
             }
         }
         
-        if result == nil, let error = error as? AbortError {
-            
-            // We have an `AbortError` which has both a
-            // status code and error message.
-            // Assign the data to the correct varaibles.
-            result = ErrorResult(message: error.reason, status: error.status)
-        } else if result == nil {
-            
-            // We use a compiler OS check because `Error` can be directly
-            // convertred to `CustomStringConvertible` on macOS, but not
-            // on Linux.
-            #if !os(macOS)
-            if let error = error as? CustomStringConvertible {
-                result = ErrorResult(message: error.description, status: nil)
-            } else {
-                result = ErrorResult(message: "Unknown error.", status: nil)
+        if result == nil {
+            switch error {
+            case let abort as AbortError:
+                // We have an `AbortError` which has both a
+                // status code and error message.
+                // Assign the data to the correct varaibles.
+                result = ErrorResult(message: abort.reason, status: abort.status)
+            case let debuggable as Debuggable where !self.environment.isRelease:
+                // Since we are not in a production environment and we
+                // have a error conforming to `Debuggable`, we get the
+                // data about the error and create a result with it.
+                // We don't do this in a production env because the error
+                // might container sensetive information
+                let reason = debuggable.debuggableHelp(format: .short)
+                result = ErrorResult(message: reason, status: .internalServerError)
+            default:
+                // We use a compiler OS check because `Error` can be directly
+                // convertred to `CustomStringConvertible` on macOS, but not
+                // on Linux.
+                #if !os(macOS)
+                if let error = error as? CustomStringConvertible {
+                    result = ErrorResult(message: error.description, status: nil)
+                } else {
+                    result = ErrorResult(message: "Unknown error.", status: nil)
+                }
+                #else
+                result = ErrorResult(message: (error as CustomStringConvertible).description, status: nil)
+                #endif
             }
-            #else
-            result = ErrorResult(message: (error as CustomStringConvertible).description, status: nil)
-            #endif
         }
         
         // Create JSON with an `error` key with the `message` constant as its value.
