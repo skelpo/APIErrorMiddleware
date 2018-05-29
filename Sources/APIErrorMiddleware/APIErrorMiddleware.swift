@@ -102,10 +102,15 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
             }
         }
         
-        // Create JSON with an `error` key with the `message` constant as its value.
-        // We default to no data instead of throwing, because we don't want any errors
-        // leaving the middleware body.
-        let json = (try? JSONEncoder().encode(["error": result.message])) ?? result.message.data(using: .utf8) ?? Data()
+        let json: Data
+        do {
+            // Create JSON with an `error` key with the `message` constant as its value.
+            json = try JSONEncoder().encode(["error": result.message])
+        } catch {
+            // Creating JSON data from error failed, so create a generic response message
+            // because we can't have any Swift errors leaving the middleware.
+            json = Data("{\"error\": \"Unable to encode error to JSON\"}".utf8)
+        }
         
         // Create an HTTPResponse with
         // - The detected status code, using
