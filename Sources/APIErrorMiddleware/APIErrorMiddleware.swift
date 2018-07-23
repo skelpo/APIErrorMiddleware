@@ -58,6 +58,10 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
         // for the response returned by the
         // middleware.
         var result: ErrorResult!
+
+        // The HTTP headers to send with the error
+        var headers: HTTPHeaders = ["Content-Type": "application/json"]
+
         
         // Loop through the specializations, running
         // the error converter on each one.
@@ -78,6 +82,10 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
                 // status code and error message.
                 // Assign the data to the correct varaibles.
                 result = ErrorResult(message: abort.reason, status: abort.status)
+
+                abort.headers.forEach { name, value in
+                    headers.add(name: name, value: value)
+                }
             case let debuggable as Debuggable where !self.environment.isRelease:
                 // Since we are not in a production environment and we
                 // have a error conforming to `Debuggable`, we get the
@@ -119,7 +127,7 @@ public final class APIErrorMiddleware: Middleware, Service, ServiceType {
         // A body with the JSON we created.
         let httpResponse = HTTPResponse(
             status: result.status ?? .badRequest,
-            headers: ["Content-Type": "application/json"],
+            headers: headers,
             body: HTTPBody(data: json)
         )
         
