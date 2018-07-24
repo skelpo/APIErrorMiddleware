@@ -40,6 +40,9 @@ public protocol ErrorCatchingSpecialization {
 
 // MARK: - ErrorCatchingSpecialization implementations
 
+#if canImport(Fluent)
+import Fluent
+
 /// Catches Fluent's `modelNotFound` error and returns a 404 status code.
 public struct ModelNotFound: ErrorCatchingSpecialization {
     public init() {}
@@ -55,3 +58,4 @@ public struct ModelNotFound: ErrorCatchingSpecialization {
         return nil
     }
 }
+#endif
